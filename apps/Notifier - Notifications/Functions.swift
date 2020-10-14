@@ -58,6 +58,27 @@ func openItem(globalOpenItem: [String]?, verboseMode: Bool) {
     }
 }
 
+// Run bash command(s)
+func runBash(globalBashCommands: String, verboseMode: Bool) {
+    if verboseMode {
+        NSLog("Notifier Log: banner - running bash %@", String(describing: globalBashCommands))
+    }
+    runBash:
+    do {
+        let task = Process()
+        task.launchPath = "/usr/bin/open"
+        task.arguments = ["-c", globalBashCommands]
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        task.standardOutput = outputPipe
+        task.standardError = errorPipe
+        task.launch()
+        if verboseMode {
+            NSLog("Notifier Log: banner - bash ran %@", String(describing: globalBashCommands))
+        }
+    }
+}
+
 // Request authorisation
 func requestAuthorisation (verboseMode: Bool) -> Void {
     if #available(macOS 10.15, *) {

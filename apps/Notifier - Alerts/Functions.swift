@@ -58,6 +58,29 @@ func openItem(globalOpenItem: [String]?, verboseMode: Bool) {
     }
 }
 
+func runBash(globalBashCommands: String, verboseMode: Bool) {
+    if verboseMode {
+        NSLog("Notifier Log: alert - running %@", String(describing: globalBashCommands))
+    }
+    runBash:
+    do {
+        let task = Process()
+        task.launchPath = "/bin/bash"
+        task.arguments = ["-c", globalBashCommands]
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        task.standardOutput = outputPipe
+        task.standardError = errorPipe
+        task.launch()
+        if verboseMode {
+            NSLog("Notifier Log: alert - running %@", String(describing: globalBashCommands))
+            NSLog("Notifier Log: alert - running %@", String(describing: task.arguments))
+            NSLog("Notifier Log: alert - stdOut %@", String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(),encoding: String.Encoding.utf8)!)
+            NSLog("Notifier Log: alert - stdErr %@", String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(),encoding: String.Encoding.utf8)!)
+        }
+    }
+}
+
 // Request authorisation
 func requestAuthorisation (verboseMode: Bool) -> Void {
     if #available(macOS 10.15, *) {
@@ -118,6 +141,12 @@ func handleUNNotification(forResponse response: UNNotificationResponse) {
                     NSLog("Notifier Log: alert - message button - logout")
                 }
                 gracefullLogout(verboseMode: verboseMode)
+                messageDismissed = false
+            } else if ((userInfo["messageButtonAction"] as? String)?.starts(with: "bash "))! {
+                if verboseMode {
+                    NSLog("Notifier Log: alert - message button bash - %@", String(describing: userInfo["messageButtonAction"]))
+                }
+                runBash(globalBashCommands: String((userInfo["messageButtonAction"] as? String)!.dropFirst(5)), verboseMode: verboseMode)
                 messageDismissed = false
             } else {
                 if verboseMode {
